@@ -52,6 +52,18 @@ private:
  * thread pool. See definition of ITaskSystem in itasksys.h for
  * documentation of the ITaskSystem interface.
  */
+
+typedef struct {
+    IRunnable* _runnable = nullptr;
+    std::mutex _mutex;
+    std::mutex _not_mutex;
+    int _cur_idx = 0;
+    int _num_total_tasks;
+    int _left_tasks_cnt;  // > confirm task is done
+    bool _kill_flag = false;
+    bool _run_flag = false;
+
+}RunStatus;
 class TaskSystemParallelThreadPoolSpinning : public ITaskSystem
 {
 public:
@@ -61,17 +73,12 @@ public:
     void run(IRunnable* runnable, int num_total_tasks);
     TaskID runAsyncWithDeps(
         IRunnable* runnable, int num_total_tasks, const std::vector<TaskID>& deps);
-    void ImplRun(IRunnable* runable, std::mutex& lock, int& cur_idx, int &num_total_tasks,
-        bool& runflag, bool& kill_flag);
+    void ImplRun(RunStatus &status);
     void sync();
 
 private:
     std::vector<std::thread> _thread_pool;
-    int _cur_idx;
-    std::mutex _lock;
-    bool _run_flag, _kill_flag;
-    int _num_total_tasks;
-    IRunnable *_run = nullptr;
+    RunStatus _run_status;
 };
 
 /*
@@ -90,6 +97,10 @@ public:
     TaskID runAsyncWithDeps(
         IRunnable* runnable, int num_total_tasks, const std::vector<TaskID>& deps);
     void sync();
+    void ImplRun(RunStatus &status);
+private:
+    std::vector<std::thread> _thread_pool;
+    RunStatus _run_status;
 };
 
 #endif
