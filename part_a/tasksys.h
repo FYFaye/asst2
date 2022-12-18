@@ -5,6 +5,7 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <condition_variable>
 #include <vector>
 
 /*
@@ -56,8 +57,11 @@ private:
 typedef struct {
     IRunnable* _runnable = nullptr;
     std::mutex _mutex;
-    std::mutex _not_mutex;
-    int _cur_idx = 0;
+    std::mutex _finished_mutex;
+    std::condition_variable _finished_cv;
+    std::mutex _sleep_mutex;
+    std::condition_variable _sleep_cv;
+    int _done_task_cnt = 0;
     int _num_total_tasks;
     int _left_tasks_cnt;  // > confirm task is done
     bool _kill_flag = false;
